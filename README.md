@@ -139,12 +139,12 @@ python main.py
 
 ### Create Account Interface
 
-![Create Account](screenshots/Create Account.png)
+![Create Account](screenshots/CreateAccount.png)
 
 
 ### Data Structures
 
-![Data Structures](screenshots/DataStructure.png)
+![Data Structures](screenshots/Data Structure.png)
 
 
 ### Graph Algorithms
@@ -161,7 +161,7 @@ python main.py
 
 ### Welcome Back (Login Interface)
 
-![Welcome Back](screenshots/WelcomeBack.png)
+![Welcome Back](screenshots/Welcome Back.png)
 ## Developer
 
 **Solo Developer**
