@@ -144,7 +144,7 @@ python main.py
 
 ### Data Structures
 
-![Data Structures](screenshots/Data Structure.png)
+![Data Structures](screenshots/DataStructure.png)
 
 
 ### Graph Algorithms
@@ -161,7 +161,7 @@ python main.py
 
 ### Welcome Back (Login Interface)
 
-![Welcome Back](screenshots/Welcome Back.png)
+![Welcome Back](screenshots/WelcomeBack.png)
 ## Developer
 
 **Solo Developer**
