@@ -161,7 +161,7 @@ python main.py
 
 ### Welcome Back (Login Interface)
 
-![Welcome Back](screenshots/Welcome Back.png)
+![Welcome Back](screenshots/WelcomeBack.png)
 ## Developer
 
 **Solo Developer**
