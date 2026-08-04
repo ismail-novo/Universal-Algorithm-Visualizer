@@ -13,8 +13,7 @@ Universal Algorithm Visualizer is an interactive application designed to help st
 ## Technologies Used
 - Python
 - Tkinter
-- Data Structures & Algorithms
-
+- Jason
 ## How to Run
 1. Download or clone the repository.
 2. Run the main Python file.
