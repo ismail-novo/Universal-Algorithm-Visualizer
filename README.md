@@ -133,20 +133,35 @@ python main.py
 
 ## Screenshots
 
-### Latest Version
+### Backtracking Algorithms
 
-(Add screenshots of the latest version here.)
+![Backtracking Algorithms](screenshots/Backtracking.png)
 
-### Previous Version
+### Create Account Interface
 
-(Add screenshots of the previous version here.)
+![Create Account](screenshots/CreateAccount.png)
 
-### Algorithm Visualizations
 
-(Add screenshots showing different algorithm visualizations.)
+### Data Structures
 
----
+![Data Structures](screenshots/DataStructure.png)
 
+
+### Graph Algorithms
+
+![Graph Algorithms](screenshots/Graph.png)
+
+### Searching Algorithms
+
+![Searching Algorithms](screenshots/Searching.png)
+
+### Sorting Algorithms
+
+![Sorting Algorithms](screenshots/Sorting.png)
+
+### Welcome Back (Login Interface)
+
+![Welcome Back](screenshots/Welcome Back.png)
 ## Developer
 
 **Solo Developer**
