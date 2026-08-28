@@ -322,6 +322,152 @@ front():    return queue[0]"""
     right child = 2*i + 2
     parent      = (i - 1) // 2"""
     },
+    # ─────────────── RECURSION ───────────────
+    "Tower of Hanoi": {
+        "time": "O(2ⁿ)  |  Space: O(n)",
+        "code": """hanoi(n, src, aux, dest):
+    if n == 1:
+        move disk from src → dest
+        return
+    hanoi(n-1, src, dest, aux)
+    move disk from src → dest
+    hanoi(n-1, aux, src, dest)"""
+    },
+    "Josephus Problem": {
+        "time": "O(n)  |  Space: O(n)",
+        "code": """josephus(n, k):
+    if n == 1: return 0
+    return (josephus(n-1, k) + k) % n
+# or iterative circle elimination"""
+    },
+    "Lines in the Plane": {
+        "time": "O(n)  |  Space: O(1)",
+        "code": """regions(n):
+    if n == 0: return 1
+    return regions(n-1) + n
+# Maximum regions by n lines:
+# R(n) = 1 + n(n+1)/2"""
+    },
+    "Fibonacci (Recursive)": {
+        "time": "O(2ⁿ)  |  Space: O(n)",
+        "code": """fib(n):
+    if n <= 1: return n
+    return fib(n-1) + fib(n-2)"""
+    },
+    "Fibonacci (Iterative)": {
+        "time": "O(n)  |  Space: O(1)",
+        "code": """fib(n):
+    if n <= 1: return n
+    a, b = 0, 1
+    for i in range(2, n+1):
+        a, b = b, a + b
+    return b"""
+    },
+    "Fibonacci (Matrix Expo)": {
+        "time": "O(log n)  |  Space: O(1)",
+        "code": """M = [[1, 1], [1, 0]]
+# F(n) = (M^(n-1))[0][0]
+mat_pow(base, exp):
+    result = Identity
+    while exp > 0:
+        if exp odd: result *= base
+        base *= base
+        exp //= 2
+    return result"""
+    },
+    "Factorial (Recursive)": {
+        "time": "O(n)  |  Space: O(n)",
+        "code": """fact(n):
+    if n <= 1: return 1
+    return n * fact(n-1)"""
+    },
+    "Binary Search (Recursive)": {
+        "time": "O(log n)  |  Space: O(log n)",
+        "code": """bin_search(arr, l, r, target):
+    if l > r: return -1
+    mid = (l + r) // 2
+    if arr[mid] == target: return mid
+    if arr[mid] < target:
+        return bin_search(arr, mid+1, r, target)
+    return bin_search(arr, l, mid-1, target)"""
+    },
+    "Permutations (Recursive)": {
+        "time": "O(n!)  |  Space: O(n)",
+        "code": """permute(arr, l, r):
+    if l == r:
+        output arr
+        return
+    for i in range(l, r+1):
+        swap(arr[l], arr[i])
+        permute(arr, l+1, r)
+        swap(arr[l], arr[i])  # backtrack"""
+    },
+    # ─────────────── DYNAMIC PROGRAMMING ───────────────
+    "Fibonacci (DP)": {
+        "time": "O(n)  |  Space: O(n) or O(1)",
+        "code": """dp[0]=0; dp[1]=1
+for i in range(2, n+1):
+    dp[i] = dp[i-1] + dp[i-2]
+return dp[n]"""
+    },
+    "0/1 Knapsack": {
+        "time": "O(nW)  |  Space: O(nW)",
+        "code": """for i in 1..n:
+    for w in 0..W:
+        if wt[i] <= w:
+            dp[i][w] = max(dp[i-1][w],
+                           val[i] + dp[i-1][w-wt[i]])
+        else:
+            dp[i][w] = dp[i-1][w]"""
+    },
+    "Longest Common Subsequence": {
+        "time": "O(mn)  |  Space: O(mn)",
+        "code": """for i in 1..m:
+    for j in 1..n:
+        if X[i]==Y[j]:
+            dp[i][j] = dp[i-1][j-1] + 1
+        else:
+            dp[i][j] = max(dp[i-1][j], dp[i][j-1])"""
+    },
+    "Coin Change": {
+        "time": "O(n*amount)  |  Space: O(amount)",
+        "code": """dp[0] = 0
+for a in 1..amount:
+    dp[a] = INF
+    for coin in coins:
+        if coin <= a:
+            dp[a] = min(dp[a], 1 + dp[a-coin])"""
+    },
+    "Edit Distance": {
+        "time": "O(mn)  |  Space: O(mn)",
+        "code": """for i in 0..m:
+    for j in 0..n:
+        if i==0: dp[i][j] = j
+        elif j==0: dp[i][j] = i
+        elif s1[i]==s2[j]:
+            dp[i][j] = dp[i-1][j-1]
+        else:
+            dp[i][j] = 1 + min(dp[i-1][j],
+                               dp[i][j-1],
+                               dp[i-1][j-1])"""
+    },
+    "Longest Increasing Subsequence": {
+        "time": "O(n²)  |  Space: O(n)",
+        "code": """dp[i] = 1
+for i in 1..n-1:
+    for j in 0..i-1:
+        if arr[j] < arr[i]:
+            dp[i] = max(dp[i], dp[j]+1)
+return max(dp)"""
+    },
+    "Climbing Stairs": {
+        "time": "O(n)  |  Space: O(1)",
+        "code": """# ways to climb n stairs (1 or 2 steps)
+a, b = 1, 1
+for i in range(2, n+1):
+    a, b = b, a + b
+return b"""
+    },
 }
 
 
@@ -485,7 +631,7 @@ class UltimateSimulator:
                  bg=CARD_BG, fg=TEXT_COLOR).grid(row=0, column=0, padx=10, pady=15)
         self.cat_menu = ttk.Combobox(
             self.ctrl_frame,
-            values=["Sorting", "Searching", "Data Structures", "Graph", "Backtracking"],
+            values=["Sorting", "Searching", "Data Structures", "Graph", "Backtracking", "Recursion", "Dynamic Programming"],
             state="readonly", width=15)
         self.cat_menu.current(0)
         self.cat_menu.grid(row=0, column=1)
@@ -609,6 +755,15 @@ class UltimateSimulator:
         elif cat == "Backtracking":
             list_val = ["N-Queen Problem", "Sudoku Solver", "Subset Generation",
                         "Graph Colouring problem", "Travelling Salesman Problem"]
+        elif cat == "Recursion":
+            list_val = ["Tower of Hanoi", "Josephus Problem", "Lines in the Plane",
+                        "Fibonacci (Recursive)", "Fibonacci (Iterative)",
+                        "Fibonacci (Matrix Expo)", "Factorial (Recursive)",
+                        "Binary Search (Recursive)", "Permutations (Recursive)"]
+        elif cat == "Dynamic Programming":
+            list_val = ["Fibonacci (DP)", "0/1 Knapsack", "Longest Common Subsequence",
+                        "Coin Change", "Edit Distance", "Longest Increasing Subsequence",
+                        "Climbing Stairs"]
         else:
             list_val = ["Array (Access/Update)", "Linked List (Traversal)",
                         "Stack UI (Step-by-Step)", "Queue UI (Step-by-Step)",
@@ -694,6 +849,24 @@ class UltimateSimulator:
             "Stack UI (Step-by-Step)": self.visualize_stack_step,
             "Queue UI (Step-by-Step)": self.visualize_queue_step,
             "Binary Tree Representation": self.draw_tree_viz,
+            # Recursion
+            "Tower of Hanoi": self.tower_of_hanoi_viz,
+            "Josephus Problem": self.josephus_viz,
+            "Lines in the Plane": self.lines_in_plane_viz,
+            "Fibonacci (Recursive)": self.fibonacci_viz,
+            "Fibonacci (Iterative)": self.fibonacci_iterative_viz,
+            "Fibonacci (Matrix Expo)": self.fibonacci_matrix_viz,
+            "Factorial (Recursive)": self.factorial_viz,
+            "Binary Search (Recursive)": self.binary_search_recursive_viz,
+            "Permutations (Recursive)": self.permutations_viz,
+            # Dynamic Programming
+            "Fibonacci (DP)": self.fibonacci_dp_viz,
+            "0/1 Knapsack": self.knapsack_viz,
+            "Longest Common Subsequence": self.lcs_viz,
+            "Coin Change": self.coin_change_viz,
+            "Edit Distance": self.edit_distance_viz,
+            "Longest Increasing Subsequence": self.lis_viz,
+            "Climbing Stairs": self.climbing_stairs_viz,
         }
         if algo in target_map:
             threading.Thread(target=target_map[algo], daemon=True).start()
@@ -1943,6 +2116,1231 @@ class UltimateSimulator:
                            [ERROR_COLOR] * max(len(self.data), 1))
             self.check_sim_state()
         self.complexity_var.set("Queue: Enqueue/Dequeue O(1) — Complete!")
+
+    # ─────────────────────────────────────────────
+    # RECURSION VISUALIZATIONS
+    # ─────────────────────────────────────────────
+    def tower_of_hanoi_viz(self):
+        self.canvas.delete("all")
+        try:
+            n = int(self.size_entry.get())
+        except:
+            n = 4
+        n = max(2, min(n, 7))
+        self.complexity_var.set(f"Tower of Hanoi: {n} disks  |  Moves: {2**n - 1}")
+
+        # Peg positions
+        pegs_x = [200, 400, 600]
+        peg_y_base = 420
+        peg_height = 220
+        disk_height = 18
+        max_width = 140
+
+        # State: list of lists (bottom → top)
+        towers = [list(range(n, 0, -1)), [], []]  # disk sizes
+
+        def draw_state(moving_disk=None, from_peg=None, to_peg=None, mid_y=None):
+            self.canvas.delete("all")
+            # Draw base
+            self.canvas.create_rectangle(80, peg_y_base, 720, peg_y_base + 15,
+                                         fill=BORDER_COLOR, outline="")
+            # Draw pegs
+            for i, x in enumerate(pegs_x):
+                self.canvas.create_rectangle(x - 6, peg_y_base - peg_height,
+                                             x + 6, peg_y_base,
+                                             fill="#565f89", outline="white")
+                self.canvas.create_text(x, peg_y_base + 30,
+                                        text=["A (Src)", "B (Aux)", "C (Dest)"][i],
+                                        fill=TEXT_COLOR, font=("Segoe UI", 10, "bold"))
+
+            # Draw disks on pegs
+            for p_idx, peg in enumerate(towers):
+                for d_idx, size in enumerate(peg):
+                    w = 30 + size * (max_width // n)
+                    x = pegs_x[p_idx]
+                    y = peg_y_base - (d_idx + 1) * disk_height
+                    color = HIGHLIGHT_COLOR if (moving_disk == size and mid_y is None) else ACCENT_COLOR
+                    self.canvas.create_rectangle(x - w // 2, y,
+                                                 x + w // 2, y + disk_height - 2,
+                                                 fill=color, outline="white", width=1)
+                    self.canvas.create_text(x, y + disk_height // 2 - 1,
+                                            text=str(size), fill="white",
+                                            font=("Arial", 9, "bold"))
+
+            # Draw moving disk in air
+            if moving_disk is not None and mid_y is not None and from_peg is not None:
+                w = 30 + moving_disk * (max_width // n)
+                x = (pegs_x[from_peg] + pegs_x[to_peg]) // 2
+                self.canvas.create_rectangle(x - w // 2, mid_y,
+                                             x + w // 2, mid_y + disk_height - 2,
+                                             fill=HIGHLIGHT_COLOR, outline="white", width=2)
+                self.canvas.create_text(x, mid_y + disk_height // 2 - 1,
+                                        text=str(moving_disk), fill="white",
+                                        font=("Arial", 9, "bold"))
+
+            self.root.update()
+
+        def move_disk(src, dest):
+            disk = towers[src].pop()
+            # Animate lift
+            for step in range(8):
+                mid_y = peg_y_base - peg_height - 30 - step * 8
+                draw_state(moving_disk=disk, from_peg=src, to_peg=dest, mid_y=mid_y)
+                time.sleep(self.speed_scale.get() * 0.15)
+            # Move sideways
+            for step in range(10):
+                t = step / 9
+                mid_x = pegs_x[src] + (pegs_x[dest] - pegs_x[src]) * t
+                mid_y = peg_y_base - peg_height - 90
+                self.canvas.delete("all")
+                # redraw static
+                self.canvas.create_rectangle(80, peg_y_base, 720, peg_y_base + 15,
+                                             fill=BORDER_COLOR, outline="")
+                for i, x in enumerate(pegs_x):
+                    self.canvas.create_rectangle(x - 6, peg_y_base - peg_height,
+                                                 x + 6, peg_y_base,
+                                                 fill="#565f89", outline="white")
+                    self.canvas.create_text(x, peg_y_base + 30,
+                                            text=["A (Src)", "B (Aux)", "C (Dest)"][i],
+                                            fill=TEXT_COLOR, font=("Segoe UI", 10, "bold"))
+                for p_idx, peg in enumerate(towers):
+                    for d_idx, size in enumerate(peg):
+                        w = 30 + size * (max_width // n)
+                        x = pegs_x[p_idx]
+                        y = peg_y_base - (d_idx + 1) * disk_height
+                        self.canvas.create_rectangle(x - w // 2, y,
+                                                     x + w // 2, y + disk_height - 2,
+                                                     fill=ACCENT_COLOR, outline="white")
+                        self.canvas.create_text(x, y + disk_height // 2 - 1,
+                                                text=str(size), fill="white",
+                                                font=("Arial", 9, "bold"))
+                w = 30 + disk * (max_width // n)
+                self.canvas.create_rectangle(mid_x - w // 2, mid_y,
+                                             mid_x + w // 2, mid_y + disk_height - 2,
+                                             fill=HIGHLIGHT_COLOR, outline="white", width=2)
+                self.canvas.create_text(mid_x, mid_y + disk_height // 2 - 1,
+                                        text=str(disk), fill="white",
+                                        font=("Arial", 9, "bold"))
+                self.root.update()
+                time.sleep(self.speed_scale.get() * 0.12)
+
+            towers[dest].append(disk)
+            draw_state()
+            self.check_sim_state()
+
+        def hanoi(k, src, aux, dest):
+            if k == 1:
+                move_disk(src, dest)
+                return
+            hanoi(k - 1, src, dest, aux)
+            move_disk(src, dest)
+            hanoi(k - 1, aux, src, dest)
+
+        draw_state()
+        self.check_sim_state()
+        hanoi(n, 0, 1, 2)
+        self.complexity_var.set(f"Tower of Hanoi: Complete!  ({2**n - 1} moves)")
+
+    def josephus_viz(self):
+        self.canvas.delete("all")
+        try:
+            n = int(self.size_entry.get())
+        except:
+            n = 10
+        n = max(5, min(n, 20))
+        k = 2  # every 2nd person (classic)
+        self.complexity_var.set(f"Josephus Problem: n={n}, k={k}")
+
+        people = list(range(n))
+        cx, cy, radius = 400, 260, 160
+
+        def draw_circle(alive, current=None, eliminated=None):
+            self.canvas.delete("all")
+            # Circle guide
+            self.canvas.create_oval(cx - radius - 10, cy - radius - 10,
+                                    cx + radius + 10, cy + radius + 10,
+                                    outline=BORDER_COLOR, width=1)
+            angle_step = 2 * math.pi / n
+            for i in range(n):
+                angle = -math.pi / 2 + i * angle_step
+                x = cx + radius * math.cos(angle)
+                y = cy + radius * math.sin(angle)
+                if i not in alive:
+                    continue
+                if i == eliminated:
+                    fill = ERROR_COLOR
+                elif i == current:
+                    fill = HIGHLIGHT_COLOR
+                else:
+                    fill = ACCENT_COLOR
+                self.canvas.create_oval(x - 18, y - 18, x + 18, y + 18,
+                                        fill=fill, outline="white", width=2)
+                self.canvas.create_text(x, y, text=str(i),
+                                        fill="white", font=("Arial", 10, "bold"))
+            remaining = sorted(alive)
+            self.canvas.create_text(400, 460,
+                                    text="Alive: " + ", ".join(map(str, remaining)),
+                                    fill=TEXT_COLOR, font=("Consolas", 11))
+            self.root.update()
+
+        alive = set(range(n))
+        idx = 0
+        draw_circle(alive)
+        self.check_sim_state()
+
+        while len(alive) > 1:
+            # Count k people
+            count = 0
+            while count < k:
+                if idx in alive:
+                    count += 1
+                    if count == k:
+                        break
+                idx = (idx + 1) % n
+            # Eliminate
+            eliminated = idx
+            draw_circle(alive, current=idx, eliminated=eliminated)
+            self.check_sim_state()
+            alive.remove(eliminated)
+            # Move to next
+            idx = (idx + 1) % n
+            while idx not in alive and alive:
+                idx = (idx + 1) % n
+            draw_circle(alive, current=idx)
+            self.check_sim_state()
+
+        survivor = list(alive)[0]
+        draw_circle(alive)
+        self.complexity_var.set(f"Josephus: Survivor is person {survivor}!")
+
+    def lines_in_plane_viz(self):
+        self.canvas.delete("all")
+        try:
+            n = int(self.size_entry.get())
+        except:
+            n = 6
+        n = max(1, min(n, 12))
+        self.complexity_var.set(f"Lines in the Plane: Maximum regions with {n} lines")
+
+        # Classic formula visualization + simple line drawing
+        # R(n) = R(n-1) + n , R(0)=1
+        regions = [1]
+        for i in range(1, n + 1):
+            regions.append(regions[-1] + i)
+
+        def draw_step(step):
+            self.canvas.delete("all")
+            # Title & formula
+            self.canvas.create_text(400, 40,
+                                    text=f"Maximum Regions by {step} Lines",
+                                    fill="white", font=("Helvetica Neue", 14, "bold"))
+            self.canvas.create_text(400, 70,
+                                    text=f"R({step}) = R({step-1}) + {step} = {regions[step]}",
+                                    fill=HIGHLIGHT_COLOR, font=("Consolas", 13))
+
+            # Draw lines (simple arrangement that maximizes regions)
+            # We draw lines with different slopes/intercepts
+            margin = 80
+            width, height = 640, 320
+            base_x, base_y = 80, 100
+
+            # Background
+            self.canvas.create_rectangle(base_x, base_y,
+                                         base_x + width, base_y + height,
+                                         fill=CANVAS_BG, outline=BORDER_COLOR)
+
+            # Draw the lines one by one
+            colors = [ACCENT_COLOR, HIGHLIGHT_COLOR, SUCCESS_COLOR, ERROR_COLOR,
+                      "#7aa2f7", "#bb9af7", "#2ac3de", "#e0af68"]
+            for i in range(step):
+                # Vary angle and position
+                angle = (i * 25 + 10) * math.pi / 180
+                # Parametric line through center with offset
+                cx = base_x + width / 2 + (i - step / 2) * 15
+                cy = base_y + height / 2 + (i % 3 - 1) * 20
+                dx = math.cos(angle) * 400
+                dy = math.sin(angle) * 400
+                x1, y1 = cx - dx, cy - dy
+                x2, y2 = cx + dx, cy + dy
+                # Clip roughly to box
+                self.canvas.create_line(x1, y1, x2, y2,
+                                        fill=colors[i % len(colors)], width=2)
+
+            # Show recurrence table
+            table_x = 100
+            self.canvas.create_text(table_x, base_y + height + 40,
+                                    text="Recurrence:",
+                                    fill=TEXT_COLOR, font=("Segoe UI", 10, "bold"),
+                                    anchor="w")
+            for i in range(min(step + 1, 9)):
+                txt = f"R({i}) = {regions[i]}"
+                color = SUCCESS_COLOR if i == step else TEXT_COLOR
+                self.canvas.create_text(table_x + i * 70, base_y + height + 65,
+                                        text=txt, fill=color,
+                                        font=("Consolas", 10))
+
+            self.root.update()
+
+        for s in range(0, n + 1):
+            draw_step(s)
+            self.check_sim_state()
+
+        self.complexity_var.set(f"Lines in the Plane: R({n}) = {regions[n]} regions")
+
+    def fibonacci_viz(self):
+        self.canvas.delete("all")
+        try:
+            n = int(self.size_entry.get())
+        except:
+            n = 7
+        # Full tree only readable up to ~6; for larger n we use stack + sequence view
+        n = max(1, min(n, 20))
+        self.complexity_var.set(f"Fibonacci Recursive: fib({n})")
+
+        call_count = [0]
+        max_depth = [0]
+        stack = []          # current call stack of k values
+        computed = {}       # memo of results we have finished
+
+        def draw_state(current_k=None, returning=None):
+            self.canvas.delete("all")
+            # Title
+            self.canvas.create_text(400, 25,
+                                    text=f"Fibonacci Recursive  —  fib({n})",
+                                    fill="white", font=("Helvetica Neue", 14, "bold"))
+            # Stats
+            self.canvas.create_text(400, 52,
+                                    text=f"Calls so far: {call_count[0]}   |   Max depth: {max_depth[0]}",
+                                    fill=HIGHLIGHT_COLOR, font=("Consolas", 11))
+
+            # ---- Call Stack (left side) ----
+            self.canvas.create_text(160, 90,
+                                    text="Call Stack",
+                                    fill=TEXT_COLOR, font=("Segoe UI", 11, "bold"))
+            box_w, box_h = 140, 28
+            for i, k in enumerate(reversed(stack)):
+                y = 110 + i * (box_h + 6)
+                is_top = (i == 0)
+                fill = HIGHLIGHT_COLOR if is_top else ACCENT_COLOR
+                self.canvas.create_rectangle(90, y, 90 + box_w, y + box_h,
+                                             fill=fill, outline="white", width=1)
+                self.canvas.create_text(160, y + box_h // 2,
+                                        text=f"fib({k})",
+                                        fill="white", font=("Consolas", 11, "bold"))
+            if returning is not None:
+                self.canvas.create_text(160, 110 + len(stack) * (box_h + 6) + 20,
+                                        text=f"← return {returning}",
+                                        fill=SUCCESS_COLOR, font=("Consolas", 11, "bold"))
+
+            # ---- Sequence / Results (right side) ----
+            self.canvas.create_text(520, 90,
+                                    text="Computed Values",
+                                    fill=TEXT_COLOR, font=("Segoe UI", 11, "bold"))
+            # Show fib(0) … fib(n) as boxes
+            cols = 8
+            start_x, start_y = 340, 115
+            box = 48
+            for i in range(n + 1):
+                col = i % cols
+                row = i // cols
+                x = start_x + col * (box + 8)
+                y = start_y + row * (box + 18)
+                if i in computed:
+                    fill = SUCCESS_COLOR
+                    txt = str(computed[i])
+                elif i == current_k:
+                    fill = HIGHLIGHT_COLOR
+                    txt = "?"
+                else:
+                    fill = CARD_BG
+                    txt = "?"
+                self.canvas.create_rectangle(x, y, x + box, y + box,
+                                             fill=fill, outline=BORDER_COLOR)
+                self.canvas.create_text(x + box // 2, y + box // 2 - 4,
+                                        text=txt, fill="white",
+                                        font=("Consolas", 10, "bold"))
+                self.canvas.create_text(x + box // 2, y + box + 9,
+                                        text=f"f({i})", fill=TEXT_COLOR,
+                                        font=("Arial", 8))
+
+            # Big result at bottom when finished
+            if n in computed:
+                self.canvas.create_text(400, 420,
+                                        text=f"fib({n}) = {computed[n]}",
+                                        fill=SUCCESS_COLOR,
+                                        font=("Consolas", 18, "bold"))
+            self.root.update()
+
+        def fib(k, depth=0):
+            call_count[0] += 1
+            max_depth[0] = max(max_depth[0], depth)
+            stack.append(k)
+            draw_state(current_k=k)
+            self.check_sim_state()
+
+            if k <= 1:
+                res = k
+            else:
+                res = fib(k - 1, depth + 1) + fib(k - 2, depth + 1)
+
+            computed[k] = res
+            stack.pop()
+            draw_state(returning=res)
+            self.check_sim_state()
+            return res
+
+        result = fib(n)
+        draw_state()
+        self.complexity_var.set(
+            f"Fibonacci: fib({n}) = {result}   |   Total calls: {call_count[0]}   |   Max depth: {max_depth[0]}")
+
+    def fibonacci_iterative_viz(self):
+        """O(n) iterative Fibonacci – contrast with the exponential recursive version."""
+        self.canvas.delete("all")
+        try:
+            n = int(self.size_entry.get())
+        except:
+            n = 10
+        n = max(0, min(n, 30))
+        self.complexity_var.set(f"Fibonacci Iterative (Optimized): fib({n})  O(n) time, O(1) space")
+
+        # Pre-compute nothing – animate step by step
+        a, b = 0, 1
+        sequence = [0]
+        if n >= 1:
+            sequence.append(1)
+
+        def draw_state(i, a_val, b_val, just_updated=False):
+            self.canvas.delete("all")
+            # Title
+            self.canvas.create_text(400, 25,
+                                    text=f"Iterative Fibonacci  —  fib({n})",
+                                    fill="white", font=("Helvetica Neue", 14, "bold"))
+            self.canvas.create_text(400, 52,
+                                    text="Only two variables needed  →  O(1) extra space",
+                                    fill=HIGHLIGHT_COLOR, font=("Consolas", 11))
+
+            # Current variables a & b
+            self.canvas.create_text(200, 100, text="a (prev)", fill=TEXT_COLOR,
+                                    font=("Segoe UI", 10, "bold"))
+            self.canvas.create_rectangle(130, 115, 270, 165,
+                                         fill=ACCENT_COLOR, outline="white", width=2)
+            self.canvas.create_text(200, 140, text=str(a_val),
+                                    fill="white", font=("Consolas", 16, "bold"))
+
+            self.canvas.create_text(400, 100, text="b (current)", fill=TEXT_COLOR,
+                                    font=("Segoe UI", 10, "bold"))
+            fill_b = SUCCESS_COLOR if just_updated else HIGHLIGHT_COLOR
+            self.canvas.create_rectangle(330, 115, 470, 165,
+                                         fill=fill_b, outline="white", width=2)
+            self.canvas.create_text(400, 140, text=str(b_val),
+                                    fill="white", font=("Consolas", 16, "bold"))
+
+            # Arrow / formula
+            self.canvas.create_text(400, 195,
+                                    text="next = a + b    then    a, b = b, next",
+                                    fill=TEXT_COLOR, font=("Consolas", 12))
+
+            # Progress bar
+            bar_x, bar_y, bar_w, bar_h = 100, 230, 600, 18
+            progress = 0 if n == 0 else min(i / n, 1.0)
+            self.canvas.create_rectangle(bar_x, bar_y, bar_x + bar_w, bar_y + bar_h,
+                                         fill=CARD_BG, outline=BORDER_COLOR)
+            self.canvas.create_rectangle(bar_x, bar_y,
+                                         bar_x + int(bar_w * progress), bar_y + bar_h,
+                                         fill=SUCCESS_COLOR, outline="")
+            self.canvas.create_text(400, bar_y + 35,
+                                    text=f"Step {i} / {n}",
+                                    fill=TEXT_COLOR, font=("Consolas", 11))
+
+            # Sequence so far
+            self.canvas.create_text(400, 290,
+                                    text="Sequence built so far:",
+                                    fill=TEXT_COLOR, font=("Segoe UI", 10, "bold"))
+            cols = 10
+            box = 48
+            start_x = 80
+            start_y = 315
+            for idx, val in enumerate(sequence):
+                col = idx % cols
+                row = idx // cols
+                x = start_x + col * (box + 6)
+                y = start_y + row * (box + 16)
+                is_latest = (idx == len(sequence) - 1)
+                fill = SUCCESS_COLOR if is_latest else CARD_BG
+                self.canvas.create_rectangle(x, y, x + box, y + box,
+                                             fill=fill, outline=BORDER_COLOR)
+                self.canvas.create_text(x + box // 2, y + box // 2 - 3,
+                                        text=str(val), fill="white",
+                                        font=("Consolas", 9, "bold"))
+                self.canvas.create_text(x + box // 2, y + box + 8,
+                                        text=f"f({idx})", fill=TEXT_COLOR,
+                                        font=("Arial", 7))
+
+            if i >= n:
+                self.canvas.create_text(400, 460,
+                                        text=f"fib({n}) = {b_val}",
+                                        fill=SUCCESS_COLOR,
+                                        font=("Consolas", 18, "bold"))
+            self.root.update()
+
+        # Special cases
+        if n == 0:
+            draw_state(0, 0, 0, True)
+            self.complexity_var.set("Fibonacci Iterative: fib(0) = 0")
+            return
+        if n == 1:
+            draw_state(1, 0, 1, True)
+            self.complexity_var.set("Fibonacci Iterative: fib(1) = 1")
+            return
+
+        draw_state(1, a, b)
+        self.check_sim_state()
+
+        for i in range(2, n + 1):
+            a, b = b, a + b
+            sequence.append(b)
+            draw_state(i, a, b, just_updated=True)
+            self.check_sim_state()
+
+        self.complexity_var.set(
+            f"Fibonacci Iterative: fib({n}) = {b}   |   Only {n-1} additions  |  O(1) space")
+
+    def fibonacci_matrix_viz(self):
+        """Fibonacci via Matrix Exponentiation – O(log n)."""
+        self.canvas.delete("all")
+        try:
+            n = int(self.size_entry.get())
+        except:
+            n = 10
+        n = max(0, min(n, 40))
+        self.complexity_var.set(f"Matrix Exponentiation: fib({n})  O(log n)")
+
+        def mat_mul(A, B):
+            return [
+                [A[0][0]*B[0][0] + A[0][1]*B[1][0],
+                 A[0][0]*B[0][1] + A[0][1]*B[1][1]],
+                [A[1][0]*B[0][0] + A[1][1]*B[1][0],
+                 A[1][0]*B[0][1] + A[1][1]*B[1][1]]
+            ]
+
+        def identity():
+            return [[1, 0], [0, 1]]
+
+        def draw_matrix(mat, title, x, y, highlight=False):
+            cell = 52
+            bg = HIGHLIGHT_COLOR if highlight else CARD_BG
+            self.canvas.create_text(x + cell, y - 18, text=title,
+                                    fill=TEXT_COLOR, font=("Segoe UI", 10, "bold"))
+            for i in range(2):
+                for j in range(2):
+                    cx = x + j * cell
+                    cy = y + i * cell
+                    self.canvas.create_rectangle(cx, cy, cx + cell, cy + cell,
+                                                 fill=bg, outline=BORDER_COLOR, width=1)
+                    val = mat[i][j]
+                    # Keep numbers readable
+                    txt = str(val) if abs(val) < 10**12 else f"{val:.2e}"
+                    self.canvas.create_text(cx + cell//2, cy + cell//2,
+                                            text=txt, fill="white",
+                                            font=("Consolas", 10, "bold"))
+
+        steps = []  # list of (base, exp, result, action)
+
+        def mat_pow(base, exp):
+            result = identity()
+            orig_exp = exp
+            step = 0
+            while exp > 0:
+                action = ""
+                if exp & 1:
+                    result = mat_mul(result, base)
+                    action = f"exp odd → result *= base"
+                steps.append(( [row[:] for row in base],
+                               exp,
+                               [row[:] for row in result],
+                               action or "skip multiply",
+                               step ))
+                base = mat_mul(base, base)
+                exp //= 2
+                step += 1
+                # also record the square
+                steps.append(( [row[:] for row in base],
+                               exp,
+                               [row[:] for row in result],
+                               "base = base²",
+                               step ))
+                step += 1
+            return result
+
+        if n == 0:
+            self.canvas.create_text(400, 250, text="fib(0) = 0",
+                                    fill=SUCCESS_COLOR, font=("Consolas", 20, "bold"))
+            self.complexity_var.set("Matrix Expo: fib(0) = 0")
+            return
+        if n == 1:
+            self.canvas.create_text(400, 250, text="fib(1) = 1",
+                                    fill=SUCCESS_COLOR, font=("Consolas", 20, "bold"))
+            self.complexity_var.set("Matrix Expo: fib(1) = 1")
+            return
+
+        # M = [[1,1],[1,0]], we need M^(n-1), then F(n) = result[0][0]
+        M = [[1, 1], [1, 0]]
+        result_mat = mat_pow([row[:] for row in M], n - 1)
+        fib_n = result_mat[0][0]
+
+        # Animate the recorded steps
+        for base, exp, res, action, step_no in steps:
+            self.canvas.delete("all")
+            self.canvas.create_text(400, 22,
+                                    text=f"Matrix Exponentiation  —  fib({n})",
+                                    fill="white", font=("Helvetica Neue", 14, "bold"))
+            self.canvas.create_text(400, 48,
+                                    text=f"Computing M^({n-1})   |   step {step_no}",
+                                    fill=HIGHLIGHT_COLOR, font=("Consolas", 11))
+
+            # Formula reminder
+            self.canvas.create_text(400, 78,
+                                    text="[[F(k+1), F(k)], [F(k), F(k-1)]]  =  [[1,1],[1,0]]^k",
+                                    fill=TEXT_COLOR, font=("Consolas", 10))
+
+            draw_matrix(base, "current base", 80, 120)
+            draw_matrix(res, "result so far", 320, 120, highlight=True)
+
+            # Exponent info
+            self.canvas.create_text(600, 140, text=f"exp = {exp}",
+                                    fill=HIGHLIGHT_COLOR, font=("Consolas", 12, "bold"))
+            self.canvas.create_text(600, 170, text=action,
+                                    fill=SUCCESS_COLOR, font=("Consolas", 11))
+
+            # Binary of original exponent
+            self.canvas.create_text(400, 280,
+                                    text=f"Original exponent {n-1} in binary: {bin(n-1)[2:]}",
+                                    fill=TEXT_COLOR, font=("Consolas", 11))
+
+            # Progress
+            total_bits = max(1, (n-1).bit_length())
+            self.canvas.create_text(400, 310,
+                                    text=f"Only ~{total_bits} iterations (log₂({n-1}))",
+                                    fill=TEXT_COLOR, font=("Segoe UI", 10))
+
+            self.root.update()
+            self.check_sim_state()
+
+        # Final result
+        self.canvas.delete("all")
+        self.canvas.create_text(400, 40,
+                                text=f"Matrix Exponentiation Complete",
+                                fill="white", font=("Helvetica Neue", 14, "bold"))
+        draw_matrix(result_mat, f"M^({n-1})", 280, 100, highlight=True)
+        self.canvas.create_text(400, 240,
+                                text=f"fib({n}) = result[0][0] = {fib_n}",
+                                fill=SUCCESS_COLOR, font=("Consolas", 16, "bold"))
+        self.canvas.create_text(400, 290,
+                                text=f"Time complexity: O(log n)  ≈  {(n-1).bit_length()} multiplications of 2×2 matrices",
+                                fill=TEXT_COLOR, font=("Consolas", 11))
+        self.complexity_var.set(
+            f"Matrix Expo: fib({n}) = {fib_n}   |   O(log n)  |  ~{(n-1).bit_length()} steps")
+        self.root.update()
+
+    def factorial_viz(self):
+        self.canvas.delete("all")
+        try:
+            n = int(self.size_entry.get())
+        except:
+            n = 6
+        n = max(1, min(n, 12))
+        self.complexity_var.set(f"Factorial Recursive: {n}!")
+
+        stack = []  # for visualization of call stack
+
+        def fact(k):
+            stack.append(k)
+            self._draw_fact_stack(stack, None)
+            self.check_sim_state()
+            if k <= 1:
+                res = 1
+            else:
+                res = k * fact(k - 1)
+            stack.pop()
+            self._draw_fact_stack(stack, res)
+            self.check_sim_state()
+            return res
+
+        result = fact(n)
+        self.complexity_var.set(f"Factorial: {n}! = {result}")
+
+    def _draw_fact_stack(self, stack, returning):
+        self.canvas.delete("all")
+        self.canvas.create_text(400, 40,
+                                text="Factorial Call Stack",
+                                fill="white", font=("Helvetica Neue", 14, "bold"))
+        if not stack and returning is not None:
+            self.canvas.create_text(400, 200,
+                                    text=f"Result = {returning}",
+                                    fill=SUCCESS_COLOR,
+                                    font=("Consolas", 20, "bold"))
+            self.root.update()
+            return
+
+        box_w, box_h = 180, 40
+        start_y = 100
+        for i, val in enumerate(reversed(stack)):
+            y = start_y + i * (box_h + 12)
+            color = HIGHLIGHT_COLOR if i == 0 else ACCENT_COLOR
+            self.canvas.create_rectangle(310, y, 310 + box_w, y + box_h,
+                                         fill=color, outline="white", width=2)
+            self.canvas.create_text(400, y + box_h // 2,
+                                    text=f"fact({val})",
+                                    fill="white", font=("Consolas", 12, "bold"))
+        if returning is not None:
+            self.canvas.create_text(400, start_y + len(stack) * (box_h + 12) + 30,
+                                    text=f"← returning {returning}",
+                                    fill=SUCCESS_COLOR, font=("Consolas", 12))
+        self.root.update()
+
+    def binary_search_recursive_viz(self):
+        if not self.data:
+            self.generate_data()
+        self.data.sort()
+        target = random.choice(self.data)
+        self.complexity_var.set(f"Recursive Binary Search: Target = {target}")
+
+        def bin_search(l, r, depth=0):
+            if l > r:
+                return -1
+            mid = (l + r) // 2
+            colors = [ACCENT_COLOR] * len(self.data)
+            for i in range(l, r + 1):
+                colors[i] = "#3a3f5c"
+            colors[mid] = HIGHLIGHT_COLOR
+            if l < len(self.data):
+                colors[l] = "#bb9af2"
+            if r < len(self.data):
+                colors[r] = "#ff9e64"
+            self.draw_bars(self.data, colors)
+            self.complexity_var.set(
+                f"Recursive Binary Search  depth={depth}  mid={mid}  target={target}")
+            self.check_sim_state()
+            if self.data[mid] == target:
+                self.draw_bars(self.data,
+                               [SUCCESS_COLOR if k == mid else ACCENT_COLOR
+                                for k in range(len(self.data))])
+                return mid
+            if self.data[mid] < target:
+                return bin_search(mid + 1, r, depth + 1)
+            return bin_search(l, mid - 1, depth + 1)
+
+        idx = bin_search(0, len(self.data) - 1)
+        if idx != -1:
+            self.complexity_var.set(f"FOUND {target} at Index {idx} (recursive)!")
+        else:
+            self.complexity_var.set("Not found.")
+
+    def permutations_viz(self):
+        self.canvas.delete("all")
+        try:
+            n = int(self.size_entry.get())
+        except:
+            n = 3
+        n = max(2, min(n, 4))  # keep small
+        arr = list(range(1, n + 1))
+        self.complexity_var.set(f"Permutations of {arr}  (n! = {math.factorial(n)})")
+
+        results = []
+
+        def draw_current(current, depth):
+            self.canvas.delete("all")
+            self.canvas.create_text(400, 30,
+                                    text=f"Generating Permutations (depth {depth})",
+                                    fill="white", font=("Helvetica Neue", 13, "bold"))
+            # Current partial
+            self.canvas.create_text(400, 70,
+                                    text="Current: " + " ".join(map(str, current)),
+                                    fill=HIGHLIGHT_COLOR, font=("Consolas", 14))
+            # All found so far
+            y = 120
+            for i, p in enumerate(results[-12:]):  # show last few
+                self.canvas.create_text(400, y + i * 22,
+                                        text=str(p),
+                                        fill=SUCCESS_COLOR, font=("Consolas", 11))
+            self.root.update()
+
+        def permute(a, l):
+            if l == len(a):
+                results.append(a[:])
+                draw_current(a, l)
+                self.check_sim_state()
+                return
+            for i in range(l, len(a)):
+                a[l], a[i] = a[i], a[l]
+                draw_current(a[:l + 1], l)
+                self.check_sim_state()
+                permute(a, l + 1)
+                a[l], a[i] = a[i], a[l]  # backtrack
+
+        permute(arr, 0)
+        self.complexity_var.set(f"Permutations: Generated {len(results)} permutations")
+
+    # ─────────────────────────────────────────────
+    # DYNAMIC PROGRAMMING VISUALIZATIONS
+    # ─────────────────────────────────────────────
+    def fibonacci_dp_viz(self):
+        """Bottom-up DP table for Fibonacci."""
+        self.canvas.delete("all")
+        try:
+            n = int(self.size_entry.get())
+        except:
+            n = 10
+        n = max(0, min(n, 25))
+        self.complexity_var.set(f"Fibonacci DP (Bottom-Up): fib({n})")
+
+        dp = [0] * (n + 1)
+        if n >= 1:
+            dp[1] = 1
+
+        def draw_table(current=None):
+            self.canvas.delete("all")
+            self.canvas.create_text(400, 25,
+                                    text=f"Fibonacci DP Table  —  fib({n})",
+                                    fill="white", font=("Helvetica Neue", 14, "bold"))
+            cols = 10
+            box = 52
+            start_x, start_y = 80, 80
+            for i in range(n + 1):
+                col = i % cols
+                row = i // cols
+                x = start_x + col * (box + 8)
+                y = start_y + row * (box + 22)
+                if i == current:
+                    fill = HIGHLIGHT_COLOR
+                elif i <= (current or -1):
+                    fill = SUCCESS_COLOR
+                else:
+                    fill = CARD_BG
+                self.canvas.create_rectangle(x, y, x + box, y + box,
+                                             fill=fill, outline=BORDER_COLOR)
+                val = dp[i] if i <= (current or -1) or (current is None and i <= n) else "?"
+                if current is None:
+                    val = dp[i]
+                self.canvas.create_text(x + box//2, y + box//2 - 4,
+                                        text=str(val), fill="white",
+                                        font=("Consolas", 11, "bold"))
+                self.canvas.create_text(x + box//2, y + box + 10,
+                                        text=f"dp[{i}]", fill=TEXT_COLOR,
+                                        font=("Arial", 8))
+            if current is not None and current >= 2:
+                self.canvas.create_text(400, 380,
+                                        text=f"dp[{current}] = dp[{current-1}] + dp[{current-2}] = {dp[current-1]} + {dp[current-2]}",
+                                        fill=HIGHLIGHT_COLOR, font=("Consolas", 12))
+            self.root.update()
+
+        draw_table(-1)
+        self.check_sim_state()
+        for i in range(2, n + 1):
+            dp[i] = dp[i-1] + dp[i-2]
+            draw_table(i)
+            self.check_sim_state()
+        draw_table(None)
+        self.complexity_var.set(f"Fibonacci DP: fib({n}) = {dp[n]}")
+
+    def knapsack_viz(self):
+        """0/1 Knapsack DP table animation."""
+        self.canvas.delete("all")
+        # Fixed small example for clear visualization
+        values = [60, 100, 120]
+        weights = [10, 20, 30]
+        W = 50
+        n = len(values)
+        self.complexity_var.set(f"0/1 Knapsack: n={n}, W={W}")
+
+        dp = [[0] * (W + 1) for _ in range(n + 1)]
+
+        def draw_dp(hi=-1, hw=-1):
+            self.canvas.delete("all")
+            self.canvas.create_text(400, 20,
+                                    text="0/1 Knapsack DP Table",
+                                    fill="white", font=("Helvetica Neue", 13, "bold"))
+            self.canvas.create_text(400, 42,
+                                    text=f"Items: val={values}  wt={weights}  Capacity={W}",
+                                    fill=TEXT_COLOR, font=("Consolas", 10))
+
+            # Draw a compact version (show every 5 capacity for space)
+            cell_w, cell_h = 28, 22
+            start_x, start_y = 60, 70
+            # Header
+            for w in range(0, W + 1, 5):
+                self.canvas.create_text(start_x + (w // 5) * cell_w + cell_w//2, start_y - 12,
+                                        text=str(w), fill=HIGHLIGHT_COLOR, font=("Arial", 7))
+            for i in range(n + 1):
+                self.canvas.create_text(start_x - 20, start_y + i * cell_h + cell_h//2,
+                                        text=str(i), fill=HIGHLIGHT_COLOR, font=("Arial", 8))
+                for w_idx, w in enumerate(range(0, W + 1, 5)):
+                    x = start_x + w_idx * cell_w
+                    y = start_y + i * cell_h
+                    if i == hi and w == hw:
+                        fill = HIGHLIGHT_COLOR
+                    elif i <= hi:
+                        fill = SUCCESS_COLOR if dp[i][w] > 0 else CARD_BG
+                    else:
+                        fill = CARD_BG
+                    self.canvas.create_rectangle(x, y, x + cell_w, y + cell_h,
+                                                 fill=fill, outline=BORDER_COLOR)
+                    self.canvas.create_text(x + cell_w//2, y + cell_h//2,
+                                            text=str(dp[i][w]), fill="white",
+                                            font=("Arial", 7))
+            self.root.update()
+
+        for i in range(1, n + 1):
+            for w in range(W + 1):
+                if weights[i-1] <= w:
+                    dp[i][w] = max(dp[i-1][w],
+                                   values[i-1] + dp[i-1][w - weights[i-1]])
+                else:
+                    dp[i][w] = dp[i-1][w]
+                if w % 5 == 0:
+                    draw_dp(i, w)
+                    self.check_sim_state()
+
+        draw_dp()
+        self.complexity_var.set(f"0/1 Knapsack: Maximum value = {dp[n][W]}")
+
+    def lcs_viz(self):
+        """Longest Common Subsequence DP table."""
+        self.canvas.delete("all")
+        X = "AGGTAB"
+        Y = "GXTXAYB"
+        m, n = len(X), len(Y)
+        self.complexity_var.set(f"LCS: '{X}' vs '{Y}'")
+
+        dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+        def draw_table(hi=-1, hj=-1):
+            self.canvas.delete("all")
+            self.canvas.create_text(400, 20,
+                                    text="Longest Common Subsequence",
+                                    fill="white", font=("Helvetica Neue", 13, "bold"))
+            self.canvas.create_text(400, 42,
+                                    text=f"X = {X}    Y = {Y}",
+                                    fill=TEXT_COLOR, font=("Consolas", 11))
+
+            cell = 36
+            sx, sy = 120, 80
+            # Column headers (Y)
+            for j in range(n):
+                self.canvas.create_text(sx + (j+1)*cell + cell//2, sy - 12,
+                                        text=Y[j], fill=HIGHLIGHT_COLOR,
+                                        font=("Consolas", 11, "bold"))
+            for i in range(m + 1):
+                if i > 0:
+                    self.canvas.create_text(sx - 15, sy + i*cell + cell//2,
+                                            text=X[i-1], fill=HIGHLIGHT_COLOR,
+                                            font=("Consolas", 11, "bold"))
+                for j in range(n + 1):
+                    x = sx + j * cell
+                    y = sy + i * cell
+                    if i == hi and j == hj:
+                        fill = HIGHLIGHT_COLOR
+                    elif i <= hi and j <= hj:
+                        fill = SUCCESS_COLOR if dp[i][j] > 0 else CARD_BG
+                    else:
+                        fill = CARD_BG
+                    self.canvas.create_rectangle(x, y, x+cell, y+cell,
+                                                 fill=fill, outline=BORDER_COLOR)
+                    self.canvas.create_text(x+cell//2, y+cell//2,
+                                            text=str(dp[i][j]), fill="white",
+                                            font=("Consolas", 10, "bold"))
+            self.root.update()
+
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                if X[i-1] == Y[j-1]:
+                    dp[i][j] = dp[i-1][j-1] + 1
+                else:
+                    dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+                draw_table(i, j)
+                self.check_sim_state()
+
+        draw_table()
+        self.complexity_var.set(f"LCS Length = {dp[m][n]}")
+
+    def coin_change_viz(self):
+        """Minimum coins DP."""
+        self.canvas.delete("all")
+        coins = [1, 3, 4]
+        amount = 10
+        try:
+            amount = min(int(self.size_entry.get()), 20)
+        except:
+            pass
+        self.complexity_var.set(f"Coin Change: coins={coins}, amount={amount}")
+
+        INF = 999
+        dp = [INF] * (amount + 1)
+        dp[0] = 0
+
+        def draw_state(curr_a=-1):
+            self.canvas.delete("all")
+            self.canvas.create_text(400, 25,
+                                    text=f"Coin Change (Min Coins)  —  amount={amount}",
+                                    fill="white", font=("Helvetica Neue", 13, "bold"))
+            self.canvas.create_text(400, 50,
+                                    text=f"Coins: {coins}",
+                                    fill=TEXT_COLOR, font=("Consolas", 11))
+
+            box = 48
+            cols = 10
+            for a in range(amount + 1):
+                col = a % cols
+                row = a // cols
+                x = 80 + col * (box + 8)
+                y = 90 + row * (box + 20)
+                if a == curr_a:
+                    fill = HIGHLIGHT_COLOR
+                elif dp[a] < INF:
+                    fill = SUCCESS_COLOR
+                else:
+                    fill = CARD_BG
+                self.canvas.create_rectangle(x, y, x+box, y+box,
+                                             fill=fill, outline=BORDER_COLOR)
+                txt = str(dp[a]) if dp[a] < INF else "∞"
+                self.canvas.create_text(x+box//2, y+box//2-3,
+                                        text=txt, fill="white",
+                                        font=("Consolas", 11, "bold"))
+                self.canvas.create_text(x+box//2, y+box+9,
+                                        text=f"a={a}", fill=TEXT_COLOR, font=("Arial", 8))
+            self.root.update()
+
+        draw_state()
+        self.check_sim_state()
+        for a in range(1, amount + 1):
+            for c in coins:
+                if c <= a and dp[a - c] + 1 < dp[a]:
+                    dp[a] = dp[a - c] + 1
+            draw_state(a)
+            self.check_sim_state()
+
+        result = dp[amount] if dp[amount] < INF else -1
+        self.complexity_var.set(f"Coin Change: Min coins for {amount} = {result}")
+
+    def edit_distance_viz(self):
+        """Levenshtein Edit Distance DP."""
+        self.canvas.delete("all")
+        s1, s2 = "kitten", "sitting"
+        m, n = len(s1), len(s2)
+        self.complexity_var.set(f"Edit Distance: '{s1}' → '{s2}'")
+
+        dp = [[0] * (n + 1) for _ in range(m + 1)]
+        for i in range(m + 1):
+            dp[i][0] = i
+        for j in range(n + 1):
+            dp[0][j] = j
+
+        def draw_table(hi=-1, hj=-1):
+            self.canvas.delete("all")
+            self.canvas.create_text(400, 18,
+                                    text="Edit Distance (Levenshtein)",
+                                    fill="white", font=("Helvetica Neue", 13, "bold"))
+            self.canvas.create_text(400, 40,
+                                    text=f"'{s1}'  →  '{s2}'",
+                                    fill=TEXT_COLOR, font=("Consolas", 11))
+
+            cell = 34
+            sx, sy = 100, 70
+            for j in range(n):
+                self.canvas.create_text(sx + (j+1)*cell + cell//2, sy - 12,
+                                        text=s2[j], fill=HIGHLIGHT_COLOR,
+                                        font=("Consolas", 10, "bold"))
+            for i in range(m + 1):
+                if i > 0:
+                    self.canvas.create_text(sx - 14, sy + i*cell + cell//2,
+                                            text=s1[i-1], fill=HIGHLIGHT_COLOR,
+                                            font=("Consolas", 10, "bold"))
+                for j in range(n + 1):
+                    x = sx + j * cell
+                    y = sy + i * cell
+                    if i == hi and j == hj:
+                        fill = HIGHLIGHT_COLOR
+                    else:
+                        fill = CARD_BG
+                    self.canvas.create_rectangle(x, y, x+cell, y+cell,
+                                                 fill=fill, outline=BORDER_COLOR)
+                    self.canvas.create_text(x+cell//2, y+cell//2,
+                                            text=str(dp[i][j]), fill="white",
+                                            font=("Consolas", 9, "bold"))
+            self.root.update()
+
+        draw_table()
+        self.check_sim_state()
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                if s1[i-1] == s2[j-1]:
+                    dp[i][j] = dp[i-1][j-1]
+                else:
+                    dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
+                draw_table(i, j)
+                self.check_sim_state()
+
+        draw_table()
+        self.complexity_var.set(f"Edit Distance = {dp[m][n]}")
+
+    def lis_viz(self):
+        """Longest Increasing Subsequence O(n²) DP."""
+        self.canvas.delete("all")
+        if not self.data:
+            self.generate_data()
+        arr = self.data[:12]  # keep small
+        n = len(arr)
+        self.complexity_var.set(f"LIS: array = {arr}")
+
+        dp = [1] * n
+        parent = [-1] * n
+
+        def draw_state(curr=-1):
+            self.canvas.delete("all")
+            self.canvas.create_text(400, 25,
+                                    text="Longest Increasing Subsequence",
+                                    fill="white", font=("Helvetica Neue", 13, "bold"))
+            # Draw array bars with dp values
+            bar_w = min(40, 600 // n)
+            for i, val in enumerate(arr):
+                x = 80 + i * (bar_w + 10)
+                h = val * 2
+                y = 320 - h
+                if i == curr:
+                    fill = HIGHLIGHT_COLOR
+                else:
+                    fill = ACCENT_COLOR
+                self.canvas.create_rectangle(x, y, x + bar_w, 320,
+                                             fill=fill, outline=BORDER_COLOR)
+                self.canvas.create_text(x + bar_w//2, y - 12,
+                                        text=str(val), fill="white",
+                                        font=("Arial", 9, "bold"))
+                # dp value under
+                self.canvas.create_text(x + bar_w//2, 340,
+                                        text=f"dp={dp[i]}", fill=SUCCESS_COLOR,
+                                        font=("Consolas", 9))
+            self.root.update()
+
+        draw_state()
+        self.check_sim_state()
+        for i in range(1, n):
+            for j in range(i):
+                if arr[j] < arr[i] and dp[j] + 1 > dp[i]:
+                    dp[i] = dp[j] + 1
+                    parent[i] = j
+            draw_state(i)
+            self.check_sim_state()
+
+        lis_len = max(dp)
+        draw_state()
+        self.complexity_var.set(f"LIS Length = {lis_len}")
+
+    def climbing_stairs_viz(self):
+        """Climbing Stairs – classic DP (same recurrence as Fibonacci)."""
+        self.canvas.delete("all")
+        try:
+            n = int(self.size_entry.get())
+        except:
+            n = 8
+        n = max(1, min(n, 20))
+        self.complexity_var.set(f"Climbing Stairs: {n} stairs")
+
+        dp = [0] * (n + 1)
+        dp[0] = 1
+        if n >= 1:
+            dp[1] = 1
+
+        def draw_state(curr=-1):
+            self.canvas.delete("all")
+            done = (curr is None)
+            active = n if done else curr
+
+            # Title
+            self.canvas.create_text(400, 22,
+                                    text=f"Climbing Stairs  —  {n} steps",
+                                    fill="white", font=("Helvetica Neue", 14, "bold"))
+            self.canvas.create_text(400, 45,
+                                    text="Ways(n) = Ways(n-1) + Ways(n-2)",
+                                    fill=TEXT_COLOR, font=("Consolas", 11))
+
+            # ── DP value boxes (top area) ──
+            box = 42
+            gap = 6
+            cols = min(n + 1, 10)
+            total_w = cols * (box + gap) - gap
+            start_x = (800 - total_w) // 2
+            start_y = 70
+
+            for i in range(n + 1):
+                col = i % 10
+                row = i // 10
+                x = start_x + col * (box + gap)
+                y = start_y + row * (box + 22)
+
+                if done or i < active:
+                    fill = SUCCESS_COLOR
+                elif i == active:
+                    fill = HIGHLIGHT_COLOR
+                else:
+                    fill = CARD_BG
+
+                self.canvas.create_rectangle(x, y, x + box, y + box,
+                                             fill=fill, outline=BORDER_COLOR, width=1)
+                self.canvas.create_text(x + box // 2, y + box // 2 - 2,
+                                        text=str(dp[i]), fill="white",
+                                        font=("Consolas", 10, "bold"))
+                self.canvas.create_text(x + box // 2, y + box + 9,
+                                        text=f"w({i})", fill=TEXT_COLOR,
+                                        font=("Arial", 7))
+
+            # ── Clean staircase (bottom area) ──
+            stair_base_y = 420
+            step_h = 16
+            step_w = max(28, min(48, 520 // (n + 1)))
+            stair_start_x = 80
+
+            for i in range(n + 1):
+                x = stair_start_x + i * step_w
+                y = stair_base_y - (i + 1) * step_h
+                w = step_w * (n + 1 - i)   # longer steps at bottom look better? 
+                # Actually keep uniform width for clarity
+                w = step_w + 8
+
+                if done or i < active:
+                    fill = SUCCESS_COLOR
+                elif i == active:
+                    fill = HIGHLIGHT_COLOR
+                else:
+                    fill = "#2d3250"
+
+                self.canvas.create_rectangle(x, y, x + w, y + step_h - 1,
+                                             fill=fill, outline=BORDER_COLOR)
+                self.canvas.create_text(x + w // 2, y + step_h // 2,
+                                        text=str(i), fill="white",
+                                        font=("Arial", 8, "bold"))
+
+            # Current formula highlight
+            if not done and active >= 2:
+                self.canvas.create_text(400, 455,
+                                        text=f"w({active}) = w({active-1}) + w({active-2}) = {dp[active-1]} + {dp[active-2]} = {dp[active]}",
+                                        fill=HIGHLIGHT_COLOR, font=("Consolas", 12, "bold"))
+            elif done:
+                self.canvas.create_text(400, 455,
+                                        text=f"Total ways to climb {n} stairs = {dp[n]}",
+                                        fill=SUCCESS_COLOR, font=("Consolas", 13, "bold"))
+
+            self.root.update()
+
+        draw_state(0)
+        self.check_sim_state()
+        for i in range(2, n + 1):
+            dp[i] = dp[i - 1] + dp[i - 2]
+            draw_state(i)
+            self.check_sim_state()
+
+        draw_state(None)
+        self.complexity_var.set(f"Climbing Stairs: {dp[n]} ways to climb {n} stairs")
 
 
 if __name__ == "__main__":
