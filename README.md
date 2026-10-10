@@ -218,6 +218,9 @@ Tkinter is included with many standard Python installations. If Tkinter is unava
 
 ![Welcome Back](screenshots/WelcomeBack.png)
 
+### Line in The Plane (Login Interface)
+
+![LineinTheplane](screenshots/LineinTheplane.png)
 
 
 ## 🎯 Project Objectives
