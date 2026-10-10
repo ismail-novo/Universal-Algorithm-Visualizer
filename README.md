@@ -214,6 +214,9 @@ Tkinter is included with many standard Python installations. If Tkinter is unava
 ### Joshepus Problem
 ![Joshepus Problem](screenshots/JoshepusProblem.png)
 
+### Line in The Plane
+![LineinTheplane](screenshots/LineinTheplane.png)
+
 ### Welcome Back (Login Interface)
 
 ![Welcome Back](screenshots/WelcomeBack.png)
