@@ -209,10 +209,10 @@ Tkinter is included with many standard Python installations. If Tkinter is unava
 ![Sorting Algorithms](screenshots/Sorting.png)
 
 ### Tower of Hanoi
-![Tower of Hanoi](screensorts/Tower of Hanoi.png)
+![Tower of Hanoi](screenshots/TowerofHanoi.png)
 
 ### Joshepus Problem
-![Joshepus Problem](screensorts/Joshepus Problem.png)
+![Joshepus Problem](screenshots/JoshepusProblem.png)
 
 ### Welcome Back (Login Interface)
 
