@@ -607,6 +607,13 @@ class UltimateSimulator:
         self.root.config(bg=BG_COLOR)
         self.data = []
         self.is_paused = False
+        self.step_count = 0
+        self.total_steps = 0
+        # Modify mode state (never mutates original ALGO_INFO)
+        self.custom_pseudocode = {}      # algo -> edited code string
+        self.applied_pseudocode = {}     # algo -> last applied code
+        self.sort_ascending = True       # derived from modified comparison
+        self.modify_active = False
         self.apply_ttk_styles()
         self.setup_ui()
 
@@ -663,11 +670,16 @@ class UltimateSimulator:
                   command=self.toggle_pause,
                   bg="#ff9e64").grid(row=0, column=8)
 
+        tk.Button(self.ctrl_frame, text="✎ Modify",
+                  command=self.open_modify_dialog,
+                  bg="#7aa2f7", fg=BG_COLOR,
+                  font=("Segoe UI", 9, "bold")).grid(row=0, column=9, padx=8)
+
         self.speed_scale = tk.Scale(self.ctrl_frame, from_=0.01, to=1.5,
                                     resolution=0.05, orient=tk.HORIZONTAL,
                                     bg=CARD_BG, fg=TEXT_COLOR, label="Speed")
         self.speed_scale.set(0.3)
-        self.speed_scale.grid(row=0, column=9, padx=20)
+        self.speed_scale.grid(row=0, column=10, padx=20)
 
         body = tk.Frame(self.root, bg=BG_COLOR)
         body.pack(fill=tk.BOTH, expand=True, padx=30, pady=5)
@@ -722,7 +734,11 @@ class UltimateSimulator:
         self.complexity_var = tk.StringVar(value="Ready to Visualize")
         tk.Label(self.info_frame, textvariable=self.complexity_var,
                  bg=CARD_BG, fg=TEXT_COLOR,
-                 font=("Consolas", 11)).pack(pady=10)
+                 font=("Consolas", 11)).pack(side=tk.LEFT, padx=20, pady=10)
+        self.step_var = tk.StringVar(value="Steps: 0")
+        tk.Label(self.info_frame, textvariable=self.step_var,
+                 bg=CARD_BG, fg=HIGHLIGHT_COLOR,
+                 font=("Consolas", 11, "bold")).pack(side=tk.RIGHT, padx=20, pady=10)
 
         self.update_pseudocode_panel()
 
@@ -732,7 +748,14 @@ class UltimateSimulator:
         self.algo_title_var.set(algo if algo else "—")
         self.code_text.config(state="normal")
         self.code_text.delete("1.0", tk.END)
-        if info:
+        # Prefer applied/custom pseudocode without mutating original ALGO_INFO
+        if algo in self.applied_pseudocode:
+            self.complexity_label_var.set(info["time"] if info else "—")
+            self.code_text.insert("1.0", self.applied_pseudocode[algo])
+        elif algo in self.custom_pseudocode:
+            self.complexity_label_var.set(info["time"] if info else "—")
+            self.code_text.insert("1.0", self.custom_pseudocode[algo])
+        elif info:
             self.complexity_label_var.set(info["time"])
             self.code_text.insert("1.0", info["code"])
         else:
@@ -784,35 +807,341 @@ class UltimateSimulator:
         self.data = [random.randint(10, 99) for _ in range(size)]
         self.draw_bars(self.data, [ACCENT_COLOR] * len(self.data))
 
+    # ─────────────────────────────────────────────
+    # MODIFY FEATURE
+    # ─────────────────────────────────────────────
+    def _analyze_sort_direction(self, code_text):
+        """Infer ascending/descending from comparison operators in pseudocode.
+        Returns True for ascending, False for descending.
+        """
+        code = code_text.lower()
+        # Count ascending-style vs descending-style comparisons
+        # Ascending bubble: arr[j] > arr[j+1]  → swap
+        # Descending:       arr[j] < arr[j+1]  → swap
+        asc_hints = code.count(">") - code.count(">=")
+        desc_hints = code.count("<") - code.count("<=")
+        # Prefer the dominant swap-trigger style
+        if "arr[j] < arr[j+1]" in code or "arr[j]<arr[j+1]" in code.replace(" ", ""):
+            return False
+        if "arr[j] > arr[j+1]" in code or "arr[j]>arr[j+1]" in code.replace(" ", ""):
+            return True
+        if "descending" in code or "desc" in code:
+            return False
+        if "ascending" in code or "asc" in code:
+            return True
+        # Fallback: more < than > in comparison context → descending
+        if desc_hints > asc_hints:
+            return False
+        return True
+
+    def _validate_pseudocode(self, code, algo):
+        """Lightweight validation — no eval/exec. Returns (ok, message)."""
+        if not code or not code.strip():
+            return False, "Pseudocode is empty."
+        lines = [ln.strip() for ln in code.splitlines() if ln.strip()]
+        if not lines:
+            return False, "Pseudocode has no statements."
+        # Reject obvious dangerous patterns
+        banned = ["import ", "exec(", "eval(", "open(", "__", "os.", "sys.",
+                  "subprocess", "socket", "file("]
+        low = code.lower()
+        for b in banned:
+            if b in low:
+                return False, f"Unsupported/unsafe construct: '{b.strip()}'"
+        # Sorting algorithms: require some recognizable structure
+        sorting = {"Bubble Sort", "Insertion Sort", "Selection Sort",
+                   "Quick Sort", "Merge Sort", "Heap Sort", "Shell Sort"}
+        if algo in sorting:
+            has_loop = any(k in low for k in ("for ", "while "))
+            has_compare = (">" in code or "<" in code)
+            if not has_loop:
+                return False, "Sorting pseudocode should contain a loop (for/while)."
+            if not has_compare:
+                return False, "Sorting pseudocode should contain a comparison (>, <)."
+        return True, "Pseudocode looks valid."
+
+    def open_modify_dialog(self):
+        """Full Modify panel: dynamic inputs, original + editable pseudocode."""
+        algo = self.algo_menu.get()
+        info = ALGO_INFO.get(algo, {})
+        original_code = info.get("code", "—")
+        current_edit = self.custom_pseudocode.get(
+            algo, self.applied_pseudocode.get(algo, original_code))
+
+        win = tk.Toplevel(self.root)
+        win.title(f"Modify — {algo}")
+        win.geometry("640x720")
+        win.config(bg=BG_COLOR)
+        win.transient(self.root)
+        win.grab_set()
+        win.resizable(True, True)
+
+        # Scrollable outer
+        canvas_outer = tk.Canvas(win, bg=BG_COLOR, highlightthickness=0)
+        scroll_y = tk.Scrollbar(win, orient="vertical", command=canvas_outer.yview)
+        canvas_outer.configure(yscrollcommand=scroll_y.set)
+        scroll_y.pack(side=tk.RIGHT, fill=tk.Y)
+        canvas_outer.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        form = tk.Frame(canvas_outer, bg=BG_COLOR)
+        canvas_outer.create_window((0, 0), window=form, anchor="nw")
+
+        def _on_form_configure(_e=None):
+            canvas_outer.configure(scrollregion=canvas_outer.bbox("all"))
+        form.bind("<Configure>", _on_form_configure)
+
+        tk.Label(form, text="✎ Modify Input & Pseudocode",
+                 bg=BG_COLOR, fg="white",
+                 font=("Helvetica Neue", 14, "bold")).pack(pady=(16, 4))
+        tk.Label(form, text=f"Algorithm: {algo}",
+                 bg=BG_COLOR, fg=HIGHLIGHT_COLOR,
+                 font=("Segoe UI", 10)).pack(pady=(0, 10))
+
+        card = tk.Frame(form, bg=CARD_BG, bd=0,
+                        highlightthickness=1, highlightbackground=BORDER_COLOR)
+        card.pack(fill=tk.BOTH, expand=True, padx=18, pady=6)
+
+        # ── 1) Array size ──
+        tk.Label(card, text="1) Array Size (N)",
+                 bg=CARD_BG, fg=TEXT_COLOR,
+                 font=("Segoe UI", 9, "bold")).pack(anchor="w", padx=16, pady=(12, 2))
+        size_row = tk.Frame(card, bg=CARD_BG)
+        size_row.pack(fill=tk.X, padx=16)
+        size_var = tk.StringVar(value=str(len(self.data) if self.data else 5))
+        size_ent = tk.Entry(size_row, textvariable=size_var, width=6,
+                            bg=BG_COLOR, fg="white", insertbackground="white",
+                            bd=0, highlightthickness=1, highlightbackground=BORDER_COLOR,
+                            font=("Segoe UI", 10))
+        size_ent.pack(side=tk.LEFT, ipady=3)
+        tk.Label(size_row, text="  (1–30)", bg=CARD_BG, fg=TEXT_COLOR,
+                 font=("Segoe UI", 8)).pack(side=tk.LEFT)
+
+        # ── 2) Dynamic value fields ──
+        tk.Label(card, text="2) Input Values (one field per element)",
+                 bg=CARD_BG, fg=TEXT_COLOR,
+                 font=("Segoe UI", 9, "bold")).pack(anchor="w", padx=16, pady=(12, 2))
+        fields_frame = tk.Frame(card, bg=CARD_BG)
+        fields_frame.pack(fill=tk.X, padx=12, pady=4)
+        value_entries = []
+
+        def rebuild_fields(preserve=True):
+            nonlocal value_entries
+            old_vals = []
+            if preserve:
+                for e in value_entries:
+                    old_vals.append(e.get().strip())
+            for w in fields_frame.winfo_children():
+                w.destroy()
+            value_entries = []
+            try:
+                n = int(size_var.get().strip())
+                n = max(1, min(n, 30))
+            except Exception:
+                n = 5
+                size_var.set("5")
+            # seed from existing data / old fields
+            seeds = old_vals if old_vals else [str(x) for x in self.data]
+            for i in range(n):
+                row = tk.Frame(fields_frame, bg=CARD_BG)
+                row.pack(fill=tk.X, pady=2)
+                tk.Label(row, text=f"[{i}]", bg=CARD_BG, fg=HIGHLIGHT_COLOR,
+                         font=("Consolas", 9), width=4).pack(side=tk.LEFT)
+                ent = tk.Entry(row, bg=BG_COLOR, fg="white", insertbackground="white",
+                               bd=0, highlightthickness=1, highlightbackground=BORDER_COLOR,
+                               font=("Segoe UI", 10), width=12)
+                default = seeds[i] if i < len(seeds) else str(random.randint(1, 99))
+                ent.insert(0, default)
+                ent.pack(side=tk.LEFT, padx=4, ipady=2)
+                value_entries.append(ent)
+            _on_form_configure()
+
+        tk.Button(size_row, text="Update Fields", command=lambda: rebuild_fields(True),
+                  bg=ACCENT_COLOR, fg=BG_COLOR, font=("Segoe UI", 8, "bold"),
+                  relief=tk.FLAT, cursor="hand2").pack(side=tk.LEFT, padx=10)
+        rebuild_fields(False)
+
+        # ── 3) Original pseudocode (read-only) ──
+        tk.Label(card, text="3) Original Pseudocode (read-only)",
+                 bg=CARD_BG, fg=HIGHLIGHT_COLOR,
+                 font=("Segoe UI", 9, "bold")).pack(anchor="w", padx=16, pady=(14, 2))
+        orig_box = tk.Text(card, height=5, bg="#1a1b26", fg=TEXT_COLOR,
+                           font=("Consolas", 9), bd=0, highlightthickness=1,
+                           highlightbackground=BORDER_COLOR, wrap="none")
+        orig_box.pack(fill=tk.X, padx=16, pady=2)
+        orig_box.insert("1.0", original_code)
+        orig_box.config(state="disabled")
+
+        # ── 4) Modified pseudocode (editable) ──
+        tk.Label(card, text="4) Modified Pseudocode (editable)",
+                 bg=CARD_BG, fg=SUCCESS_COLOR,
+                 font=("Segoe UI", 9, "bold")).pack(anchor="w", padx=16, pady=(10, 2))
+        mod_box = tk.Text(card, height=8, bg=BG_COLOR, fg="white",
+                          font=("Consolas", 9), bd=0, highlightthickness=1,
+                          highlightbackground=BORDER_COLOR, wrap="none",
+                          insertbackground="white")
+        mod_box.pack(fill=tk.BOTH, expand=True, padx=16, pady=2)
+        mod_box.insert("1.0", current_edit)
+
+        status_var = tk.StringVar(value="")
+        tk.Label(card, textvariable=status_var, bg=CARD_BG, fg=ERROR_COLOR,
+                 font=("Segoe UI", 9), wraplength=560, justify="left").pack(
+                     anchor="w", padx=16, pady=(6, 4))
+
+        tip = ("Tip: For Bubble/Insertion/Selection Sort, change '>' to '<' "
+               "(or vice versa) to switch ascending ↔ descending. "
+               "Arbitrary full rewrites are validated but only supported "
+               "comparison-direction changes alter execution.")
+        tk.Label(card, text=tip, bg=CARD_BG, fg=TEXT_COLOR,
+                 font=("Segoe UI", 8), wraplength=560, justify="left").pack(
+                     anchor="w", padx=16, pady=(0, 8))
+
+        def do_validate():
+            code = mod_box.get("1.0", tk.END).rstrip()
+            ok, msg = self._validate_pseudocode(code, algo)
+            status_var.set(("✓ " if ok else "✗ ") + msg)
+            return ok, code
+
+        def do_reset():
+            mod_box.delete("1.0", tk.END)
+            mod_box.insert("1.0", original_code)
+            status_var.set("Reset to original pseudocode.")
+
+        def do_cancel():
+            win.destroy()
+
+        def _collect_and_apply(silent=False):
+            """Validate + apply data/pseudocode. Returns True on success."""
+            ok, code = do_validate()
+            if not ok:
+                messagebox.showerror("Validation Failed", status_var.get(), parent=win)
+                return False
+            nums = []
+            for i, e in enumerate(value_entries):
+                raw = e.get().strip()
+                if raw == "":
+                    messagebox.showerror("Invalid Input",
+                                         f"Field [{i}] is empty.", parent=win)
+                    return False
+                try:
+                    nums.append(int(raw))
+                except ValueError:
+                    messagebox.showerror("Invalid Input",
+                                         f"Field [{i}] is not an integer: '{raw}'",
+                                         parent=win)
+                    return False
+            if not nums:
+                messagebox.showerror("Invalid Input", "Need at least one number.", parent=win)
+                return False
+
+            self.data = nums[:]
+            self.size_entry.delete(0, tk.END)
+            self.size_entry.insert(0, str(len(nums)))
+            self.custom_pseudocode[algo] = code
+            self.applied_pseudocode[algo] = code
+            self.sort_ascending = self._analyze_sort_direction(code)
+            self.modify_active = True
+            self.step_count = 0
+            self.step_var.set("Steps: 0")
+            self.update_pseudocode_panel()
+            self.draw_bars(self.data, [ACCENT_COLOR] * len(self.data))
+            order = "ascending" if self.sort_ascending else "descending"
+            self.complexity_var.set(
+                f"Modified applied ({len(nums)} elements, sort={order})")
+            status_var.set(f"✓ Applied ({order}).")
+            if not silent:
+                messagebox.showinfo(
+                    "Applied",
+                    f"Data & pseudocode applied.\n"
+                    f"Elements: {nums}\n"
+                    f"Detected sort order: {order}",
+                    parent=win)
+            return True
+
+        def do_apply():
+            if _collect_and_apply(silent=False):
+                win.destroy()
+
+        def do_apply_and_run():
+            if _collect_and_apply(silent=True):
+                win.destroy()
+                self.root.after(80, self.start_thread)
+
+        btn_row = tk.Frame(form, bg=BG_COLOR)
+        btn_row.pack(fill=tk.X, padx=18, pady=12)
+        tk.Button(btn_row, text="Validate", command=do_validate,
+                  bg="#7aa2f7", fg=BG_COLOR, font=("Segoe UI", 9, "bold"),
+                  relief=tk.FLAT, cursor="hand2").pack(side=tk.LEFT, padx=3, ipadx=6, ipady=3)
+        tk.Button(btn_row, text="Reset", command=do_reset,
+                  bg=CARD_BG, fg=TEXT_COLOR, font=("Segoe UI", 9),
+                  relief=tk.FLAT, cursor="hand2").pack(side=tk.LEFT, padx=3, ipadx=6, ipady=3)
+        tk.Button(btn_row, text="Apply Changes", command=do_apply,
+                  bg=SUCCESS_COLOR, fg=BG_COLOR, font=("Segoe UI", 9, "bold"),
+                  relief=tk.FLAT, cursor="hand2").pack(side=tk.LEFT, padx=3, ipadx=6, ipady=3)
+        tk.Button(btn_row, text="▶ Apply & Run", command=do_apply_and_run,
+                  bg=ACCENT_COLOR, fg="white", font=("Segoe UI", 9, "bold"),
+                  relief=tk.FLAT, cursor="hand2").pack(side=tk.LEFT, padx=3, ipadx=6, ipady=3)
+        tk.Button(btn_row, text="Cancel", command=do_cancel,
+                  bg=ERROR_COLOR, fg="white", font=("Segoe UI", 9),
+                  relief=tk.FLAT, cursor="hand2").pack(side=tk.RIGHT, padx=3, ipadx=6, ipady=3)
+
     def draw_bars(self, data, color_list):
         self.canvas.delete("all")
-        c_height = 400
+        if not data:
+            self.root.update_idletasks()
+            return
+        c_height = 300
         c_width = max(self.canvas.winfo_width(), 600)
-        x_width = c_width / (len(data) + 1)
-        offset = 30
+        # Narrower bars with more spacing
+        x_width = c_width / (len(data) + 1.5)
+        bar_width = x_width * 0.55
+        offset = 40
+        max_abs = max(abs(v) for v in data) or 1
+        # Smaller max height (~150px)
+        scale = min(1.5, 150.0 / max_abs)
+        base_y = c_height - 8
         for i, val in enumerate(data):
-            x0 = i * x_width + offset
-            y0 = c_height - (val * 3)
-            x1 = (i + 1) * x_width + offset
-            y1 = c_height
+            cx = offset + i * x_width + x_width / 2
+            bar_h = max(4, abs(val) * scale)
+            if val >= 0:
+                y0 = base_y - bar_h
+                y1 = base_y
+            else:
+                y0 = base_y
+                y1 = base_y + min(bar_h, 35)
+            x0 = cx - bar_width / 2
+            x1 = cx + bar_width / 2
+            fill = color_list[i] if i < len(color_list) else ACCENT_COLOR
             self.canvas.create_rectangle(x0, y0, x1, y1,
-                                         fill=color_list[i], outline=BORDER_COLOR)
-            self.canvas.create_text(x0 + (x_width / 2), y0 - 15,
+                                         fill=fill, outline=BORDER_COLOR)
+            label_y = y0 - 10 if val >= 0 else y1 + 10
+            self.canvas.create_text(cx, label_y,
                                     text=str(val), fill="white",
-                                    font=("Arial", 10, "bold"))
+                                    font=("Arial", 9, "bold"))
         self.root.update_idletasks()
 
     def toggle_pause(self):
         self.is_paused = not self.is_paused
 
     def check_sim_state(self):
+        self.step_count += 1
+        self.step_var.set(f"Steps: {self.step_count}")
         while self.is_paused:
             time.sleep(0.1)
         time.sleep(self.speed_scale.get())
 
     def start_thread(self):
         algo = self.algo_menu.get()
+        self.step_count = 0
+        self.step_var.set("Steps: 0")
         self.update_pseudocode_panel()
+        if not self.data and algo in (
+            "Bubble Sort", "Insertion Sort", "Merge Sort", "Heap Sort",
+            "Bucket Sort", "Selection Sort", "Quick Sort", "Counting Sort",
+            "Radix Sort", "Shell Sort", "Tim Sort", "Tree Sort",
+            "Linear Search", "Binary Search", "Jump Search",
+            "Interpolation Search", "Exponential Search",
+            "Longest Increasing Subsequence",
+        ):
+            self.generate_data()
         target_map = {
             "Bubble Sort": self.bubble_sort,
             "Insertion Sort": self.insertion_sort,
@@ -1738,20 +2067,31 @@ class UltimateSimulator:
     # ─────────────────────────────────────────────
     def bubble_sort(self):
         n = len(self.data)
+        asc = self.sort_ascending
         for i in range(n):
             for j in range(n - i - 1):
-                if self.data[j] > self.data[j + 1]:
+                should_swap = (self.data[j] > self.data[j + 1]) if asc else (self.data[j] < self.data[j + 1])
+                if should_swap:
                     self.data[j], self.data[j + 1] = self.data[j + 1], self.data[j]
                     self.draw_bars(self.data,
                                    [ERROR_COLOR if k == j or k == j + 1
                                     else ACCENT_COLOR for k in range(n)])
                     self.check_sim_state()
+                else:
+                    # still count comparison steps for accurate step count
+                    self.draw_bars(self.data,
+                                   [HIGHLIGHT_COLOR if k == j or k == j + 1
+                                    else ACCENT_COLOR for k in range(n)])
+                    self.check_sim_state()
         self.draw_bars(self.data, [SUCCESS_COLOR] * n)
+        order = "ascending" if asc else "descending"
+        self.complexity_var.set(f"Bubble Sort complete ({order}) — Steps: {self.step_count}")
 
     def insertion_sort(self):
+        asc = self.sort_ascending
         for i in range(1, len(self.data)):
             key, j = self.data[i], i - 1
-            while j >= 0 and self.data[j] > key:
+            while j >= 0 and ((self.data[j] > key) if asc else (self.data[j] < key)):
                 self.draw_bars(self.data,
                                [HIGHLIGHT_COLOR if k == j else ACCENT_COLOR
                                 for k in range(len(self.data))])
@@ -1760,6 +2100,8 @@ class UltimateSimulator:
                 j -= 1
             self.data[j + 1] = key
         self.draw_bars(self.data, [SUCCESS_COLOR] * len(self.data))
+        order = "ascending" if asc else "descending"
+        self.complexity_var.set(f"Insertion Sort complete ({order}) — Steps: {self.step_count}")
 
     def merge_sort_start(self):
         self.merge_sort(0, len(self.data) - 1)
@@ -1839,16 +2181,20 @@ class UltimateSimulator:
 
     def selection_sort(self):
         n = len(self.data)
+        asc = self.sort_ascending
         for i in range(n):
             m_idx = i
             for j in range(i + 1, n):
-                if self.data[j] < self.data[m_idx]:
+                better = (self.data[j] < self.data[m_idx]) if asc else (self.data[j] > self.data[m_idx])
+                if better:
                     m_idx = j
             self.data[i], self.data[m_idx] = self.data[m_idx], self.data[i]
             self.draw_bars(self.data,
                            [SUCCESS_COLOR if k <= i else ACCENT_COLOR
                             for k in range(n)])
             self.check_sim_state()
+        order = "ascending" if asc else "descending"
+        self.complexity_var.set(f"Selection Sort complete ({order}) — Steps: {self.step_count}")
 
     def quick_sort_start(self):
         self.quick_sort(0, len(self.data) - 1)
